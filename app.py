@@ -1,8 +1,20 @@
 from flask import Flask, render_template, request, redirect, url_for
 import psycopg2
 import os
+import json
+from confluent_kafka import Producer
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
+
+# Kafka producer setup
+kafka_config = {
+    'bootstrap.servers': os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+}
+producer = Producer(kafka_config)
 
 # Database connection
 def get_db():
@@ -30,6 +42,22 @@ def init_db():
     cur.close()
     conn.close()
 
+# Helper function to send messages to Kafka
+def send_to_kafka(action, task_id=None, task=None, done=None):
+    message = {"action": action}
+    if task_id is not None:
+        message["id"] = task_id
+    if task is not None:
+        message["task"] = task
+    if done is not None:
+        message["done"] = done
+
+    producer.produce(
+        topic="todo_tasks",
+        value=json.dumps(message).encode("utf-8")
+    )
+    producer.flush()
+
 # Home page - show all todos
 @app.route("/")
 def index():
@@ -46,34 +74,22 @@ def index():
 def add():
     task = request.form.get("task")
     if task:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("INSERT INTO todos (task) VALUES (%s)", (task,))
-        conn.commit()
-        cur.close()
-        conn.close()
+        # Send to Kafka instead of directly to DB
+        send_to_kafka(action="create", task=task, done=False)
     return redirect(url_for("index"))
 
 # Toggle todo done/undone
 @app.route("/toggle/<int:id>")
 def toggle(id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE todos SET done = NOT done WHERE id = %s", (id,))
-    conn.commit()
-    cur.close()
-    conn.close()
+    # Send to Kafka instead of directly to DB
+    send_to_kafka(action="toggle", task_id=id)
     return redirect(url_for("index"))
 
 # Delete todo
 @app.route("/delete/<int:id>")
 def delete(id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM todos WHERE id = %s", (id,))
-    conn.commit()
-    cur.close()
-    conn.close()
+    # Send to Kafka instead of directly to DB
+    send_to_kafka(action="delete", task_id=id)
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
