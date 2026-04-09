@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-consumer
+  namespace: test-kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-consumer
+  template:
+    metadata:
+      labels:
+        app: todo-consumer
+    spec:
+      containers:
+      - name: todo-consumer
+        image: image-registry.openshift-image-registry.svc:5000/test-kafka/todo-consumer:latest
+        command: ["python", "consumer.py"]
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka.test-kafka.svc.cluster.local:9092"
+        - name: KAFKA_SECURITY_PROTOCOL
+          value: "SASL_PLAINTEXT"
+        - name: KAFKA_SASL_MECHANISM
+          value: "SCRAM-SHA-256"
+        - name: KAFKA_USERNAME
+          value: "user1"
+        - name: KAFKA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kafka-user-passwords
+              key: client-passwords
+        - name: KAFKA_TOPIC
+          value: "todo_tasks"
+        - name: DB_HOST
+          value: "postgresql-15-c9s"
+        - name: DB_NAME
+          value: "todo_db"
+        - name: DB_USER
+          value: "postgres"
+        - name: DB_PASSWORD
+          value: "postgres"
+        - name: DB_PORT
+          value: "5432"
