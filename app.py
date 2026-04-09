@@ -17,7 +17,13 @@ app = Flask(__name__)
 
 # Kafka producer setup
 kafka_config = {
-    'bootstrap.servers': os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "kafka.test-kafka.svc.cluster.local:9092")
+    'bootstrap.servers': os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "kafka.test-kafka.svc.cluster.local:9092"),
+    'security.protocol': os.environ.get("KAFKA_SECURITY_PROTOCOL", "SASL_PLAINTEXT"),
+    'sasl.mechanism': os.environ.get("KAFKA_SASL_MECHANISM", "SCRAM-SHA-256"),
+    'sasl.username': os.environ.get("KAFKA_USERNAME", "user1"),
+    'sasl.password': os.environ.get("KAFKA_PASSWORD", ""),
+    'socket.timeout.ms': 10000,
+    'message.timeout.ms': 10000,
 }
 producer = Producer(kafka_config)
 

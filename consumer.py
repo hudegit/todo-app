@@ -19,9 +19,13 @@ def get_db():
 
 # Kafka consumer setup
 conf = {
-    'bootstrap.servers': os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
+    'bootstrap.servers': os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "kafka.test-kafka.svc.cluster.local:9092"),
     'group.id': 'todo-consumer-group',
-    'auto.offset.reset': 'earliest'
+    'auto.offset.reset': 'earliest',
+    'security.protocol': os.environ.get("KAFKA_SECURITY_PROTOCOL", "SASL_PLAINTEXT"),
+    'sasl.mechanism': os.environ.get("KAFKA_SASL_MECHANISM", "SCRAM-SHA-256"),
+    'sasl.username': os.environ.get("KAFKA_USERNAME", "user1"),
+    'sasl.password': os.environ.get("KAFKA_PASSWORD", ""),
 }
 
 consumer = Consumer(conf)
