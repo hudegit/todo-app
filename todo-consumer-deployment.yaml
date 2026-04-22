@@ -1,8 +1,12 @@
+# ================================================================
+# BEFORE DEPLOYING: Replace <YOUR_NAMESPACE> with your OpenShift
+# project/namespace name (e.g. kafka-project)
+# ================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: todo-consumer
-  namespace: test-kafka
+  namespace: <YOUR_NAMESPACE> # Replace with your namespace
 spec:
   replicas: 1
   selector:
@@ -15,11 +19,13 @@ spec:
     spec:
       containers:
       - name: todo-consumer
-        image: image-registry.openshift-image-registry.svc:5000/test-kafka/todo-consumer:latest
+        # Replace <YOUR_NAMESPACE> with your namespace
+        image: image-registry.openshift-image-registry.svc:5000/<YOUR_NAMESPACE>/todo-consumer:latest
         command: ["python", "consumer.py"]
         env:
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka.test-kafka.svc.cluster.local:9092"
+          # Replace <YOUR_NAMESPACE> with your namespace
+          value: "kafka.<YOUR_NAMESPACE>.svc.cluster.local:9092"
         - name: KAFKA_SECURITY_PROTOCOL
           value: "SASL_PLAINTEXT"
         - name: KAFKA_SASL_MECHANISM
@@ -34,12 +40,14 @@ spec:
         - name: KAFKA_TOPIC
           value: "todo_tasks"
         - name: DB_HOST
-          value: "postgresql-15-c9s"
+          # Replace <YOUR_NAMESPACE> with your namespace
+          value: "postgresql.<YOUR_NAMESPACE>.svc.cluster.local"
         - name: DB_NAME
           value: "todo_db"
         - name: DB_USER
           value: "postgres"
         - name: DB_PASSWORD
+          # Update this with your PostgreSQL password
           value: "postgres"
         - name: DB_PORT
           value: "5432"
